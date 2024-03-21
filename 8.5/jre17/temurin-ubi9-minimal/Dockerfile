@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM amazoncorretto:8-al2023-jre
+FROM eclipse-temurin:17-jre-ubi9-minimal
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -23,12 +23,12 @@ ENV TOMCAT_MAJOR 8
 ENV TOMCAT_VERSION 8.5.99
 ENV TOMCAT_SHA512 38f636039d00c66ff8f7347dfedcc1eef85b7ce25cf98dcc9192df07f85d4f6aec447922e0f934c1ab7d099ec484b2060aad4de496d5ca14637ac435cb55b7c0
 
-COPY --from=tomcat:8.5.99-jdk8-corretto-al2023 $CATALINA_HOME $CATALINA_HOME
+COPY --from=tomcat:8.5.99-jdk17-temurin-ubi9-minimal $CATALINA_HOME $CATALINA_HOME
 RUN set -eux; \
 # no xargs in al20XX and ubiX-minimal /o\
 	deps="$(cat "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt")"; \
-	dnf install -y $deps; \
-	dnf clean all; \
+	microdnf install -y $deps; \
+	microdnf clean all; \
 	rm -rf /var/cache/dnf
 
 # verify Tomcat Native is working properly
@@ -42,4 +42,8 @@ RUN set -eux; \
 	fi
 
 EXPOSE 8080
+
+# upstream eclipse-temurin-provided entrypoint script caused https://github.com/docker-library/tomcat/issues/77 to come back as https://github.com/docker-library/tomcat/issues/302; use "/entrypoint.sh" at your own risk
+ENTRYPOINT []
+
 CMD ["catalina.sh", "run"]

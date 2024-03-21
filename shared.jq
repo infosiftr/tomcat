@@ -30,11 +30,14 @@ def is_yum:
 		or contains("oraclelinux7")
 	)
 ;
+def variant_is_microdnf:
+	contains("oraclelinux") or contains("ubi")
+;
 def is_apt:
 	vendor_variant | (
-		contains("al2")
+		variant_is_microdnf
+		or contains("al2")
 		or contains("alpine")
-		or contains("oraclelinux")
 	) | not
 ;
 def is_native_ge_2:

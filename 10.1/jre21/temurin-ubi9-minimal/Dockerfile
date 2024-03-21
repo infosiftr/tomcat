@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM amazoncorretto:8-al2023-jre
+FROM eclipse-temurin:21-jre-ubi9-minimal
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -15,20 +15,20 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# see https://www.apache.org/dist/tomcat/tomcat-9/KEYS
+# see https://www.apache.org/dist/tomcat/tomcat-10/KEYS
 # see also "versions.sh" (https://github.com/docker-library/tomcat/blob/master/versions.sh)
-ENV GPG_KEYS 48F8E69F6390C9F25CFEDCD268248959359E722B A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243
+ENV GPG_KEYS 5C3C5F3E314C866292F359A8F3AD5C94A67F707E A9C5DF4D22E99998D9875A5110C01C5A2F6059E7
 
-ENV TOMCAT_MAJOR 9
-ENV TOMCAT_VERSION 9.0.87
-ENV TOMCAT_SHA512 71a64fe805aab89ef4798571d860a3c9a4f751f808921559a9249305abb205836de33ab89bb33b625a77f799f193d6bffbe94aadf293866df756d708f5bfb933
+ENV TOMCAT_MAJOR 10
+ENV TOMCAT_VERSION 10.1.19
+ENV TOMCAT_SHA512 7264da6196a510b0bba74469d215d61a464331302239256477f78b6bec067f7f4d90f671b96a440061ae0e20d16b1be8ca1dbd547dab9927383366dbc677f590
 
-COPY --from=tomcat:9.0.87-jdk8-corretto-al2023 $CATALINA_HOME $CATALINA_HOME
+COPY --from=tomcat:10.1.19-jdk21-temurin-ubi9-minimal $CATALINA_HOME $CATALINA_HOME
 RUN set -eux; \
 # no xargs in al20XX and ubiX-minimal /o\
 	deps="$(cat "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt")"; \
-	dnf install -y $deps; \
-	dnf clean all; \
+	microdnf install -y $deps; \
+	microdnf clean all; \
 	rm -rf /var/cache/dnf
 
 # verify Tomcat Native is working properly
@@ -42,4 +42,8 @@ RUN set -eux; \
 	fi
 
 EXPOSE 8080
+
+# upstream eclipse-temurin-provided entrypoint script caused https://github.com/docker-library/tomcat/issues/77 to come back as https://github.com/docker-library/tomcat/issues/302; use "/entrypoint.sh" at your own risk
+ENTRYPOINT []
+
 CMD ["catalina.sh", "run"]

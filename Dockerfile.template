@@ -106,7 +106,7 @@ RUN set -eux; \
 # TODO there's an odd bug on Oracle Linux where installing "cpp" (which gets pulled in as a dependency of "gcc") and then marking it as automatically-installed will result in the "filesystem" package being removed during "yum autoremove" (which then fails), so we set it as manually-installed to compensate
 	yumdb set reason user filesystem; \
 {{ ) else "" end -}}
-{{ ) elif vendor_variant | contains("oraclelinux") then ( -}}
+{{ ) elif vendor_variant | variant_is_microdnf then ( -}}
 # removing dnf after it is installed gets really hairy, so we'll just live with it (since we need it for "dnf mark")
 	microdnf install -y dnf; \
 {{ ) else "" end -}}
@@ -213,7 +213,7 @@ RUN set -eux; \
 {{ ) else ( -}}
 		openssl-devel \
 {{ ) end -}}
-{{ if vendor_variant | contains("oraclelinux") then ( -}}
+{{ if vendor_variant | variant_is_microdnf then ( -}}
 # "gcc: error: /usr/lib/rpm/redhat/redhat-hardened-cc1: No such file or directory"
 		redhat-rpm-config \
 {{ ) else "" end -}}
@@ -321,15 +321,15 @@ RUN set -eux; \
 {{ ) elif is_alpine then ( -}}
 	deps="$(cat "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt")"; \
 	apk add --no-cache --virtual .tomcat-native-deps $deps
-{{ ) elif vendor_variant | contains("al20") then ( -}}
-# no xargs in al20xx /o\
+{{ ) elif vendor_variant | contains("al20") or contains("ubi") then ( -}}
+# no xargs in al20XX and ubiX-minimal /o\
 	deps="$(cat "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt")"; \
-	dnf install -y $deps; \
-	dnf clean all; \
+	{{ if vendor_variant | variant_is_microdnf then "microdnf" else "dnf" end }} install -y $deps; \
+	{{ if vendor_variant | variant_is_microdnf then "microdnf" else "dnf" end }} clean all; \
 	rm -rf /var/cache/dnf
 {{ ) else ( -}}
-	xargs -rt {{ if is_yum then "yum" elif vendor_variant | contains("oraclelinux") then "microdnf" else "dnf" end }} install -y{{ if is_yum then " --setopt=skip_missing_names_on_install=False" else "" end }} < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
-	{{ if is_yum then "yum" elif vendor_variant | contains("oraclelinux") then "microdnf" else "dnf" end }} clean all; \
+	xargs -rt {{ if is_yum then "yum" elif vendor_variant | variant_is_microdnf then "microdnf" else "dnf" end }} install -y{{ if is_yum then " --setopt=skip_missing_names_on_install=False" else "" end }} < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
+	{{ if is_yum then "yum" elif vendor_variant | variant_is_microdnf then "microdnf" else "dnf" end }} clean all; \
 	rm -rf /var/cache/{{ if is_yum then "yum" else "dnf" end }}
 {{ ) end -}}
 {{ ) end -}}

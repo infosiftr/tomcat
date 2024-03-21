@@ -40,7 +40,7 @@ for javaVersion in \
 ; do
 	# Eclipse Temurin, followed by OpenJDK, and then all other variants alphabetically
 	for vendorVariant in \
-		temurin-{jammy,focal,alpine} \
+		temurin-{jammy,focal,alpine,ubi9-minimal} \
 		openjdk-{{,slim-}{bookworm,bullseye,buster},alpine{3.19,3.18,3.17,3.16},oraclelinux{9,8}} \
 		corretto-{al2023,al2,alpine{3.19,3.18,3.17,3.16}} \
 		sapmachine \
